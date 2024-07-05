@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SVG Poster Editor</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 1100px;
+
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        .card {
+            position: relative;
+            overflow: hidden;
+
+        }
+
+        .card img {
+            width: 100%;
+            max-width: 100%;
+            /* Adjusted maximum width */
+            height: auto;
+            background-color: #f9f9f9;
+            padding: 0;
+            display: block;
+            border-radius: 10px;
+            border: 1px solid #818181;
+            box-sizing: border-box;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            transition: filter 0.3s ease-in-out;
+        }
+
+
+        .file-input {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+        }
+
+        .editor {
+            width: 600px;
+            height: 600px;
+            background-color: white;
+            border: 1px solid #ccc;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            position: relative;
+            margin-right: 20px;
+            overflow: hidden;
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .text-edit-section {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .text-edit-section textarea {
+            width: 300px;
+            height: 50px;
+            margin-bottom: 10px;
+            padding: 5px;
+            font-size: 14px;
+        }
+
+        .text-edit-section label {
+            margin-top: 10px;
+        }
+
+        .formatting-options,
+        .size-control,
+        .text-align {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn:hover {
+            background-color: #0056b3;
+        }
+
+        .format-btn,
+        .size-btn,
+        .align-btn {
+            padding: 5px 10px;
+            font-size: 14px;
+        }
+
+        #colorPicker {
+            margin-top: 10px;
+        }
+
+        .image-upload {
+            margin-top: 10px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #imageDropZone {
+            width: 300px;
+            height: 100px;
+            border: 2px dashed #ccc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 10px;
+            font-size: 14px;
+            color: #888;
+        }
+
+        .save-export {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Trigger/Open The Modal -->
+    <!-- <button id="openModalBtn" class="btn">Open Editor</button> -->
+
+    <!-- Card with image and customize button -->
+    <div class="card">
+        <img src="https://firebasestorage.googleapis.com/v0/b/uvelaphi-designs.appspot.com/o/Brown%20Beige%20Creative%20Indonesian%20Culture%20Festivals%20Poster.svg?alt=media&token=b258af53-fcf1-4c57-a436-cd100c74b360" alt="Poster" width="510px" height="400px"
+            id="cardImage" />
+        <a href="javascript:void(0)" class="btn"
+            onclick="openModalWithImage('https://firebasestorage.googleapis.com/v0/b/uvelaphi-designs.appspot.com/o/Brown%20Beige%20Creative%20Indonesian%20Culture%20Festivals%20Poster.svg?alt=media&token=b258af53-fcf1-4c57-a436-cd100c74b360')">Customize</a>
+        <!-- You can remove this button if you prefer using the link above -->
+        <!-- <button id="openModalBtn" class="btn">Open Editor</button> -->
+    </div>
+
+    <!-- The Modal -->
+    <div id="myModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <!-- Existing editor content here -->
+            <div class="container">
+                <!-- <input type="file" id="fileInput" accept=".svg" class="file-input"> -->
+                <div id="editor" class="editor"></div>
+                <div class="controls">
+                    <div class="text-edit-section">
+                        <textarea id="editTextInput" placeholder="Edit text here..."></textarea>
+                        <label for="fontSelect">Font:</label>
+                        <select id="fontSelect">
+                            <option value="Arial">Arial</option>
+                            <option value="Helvetica Neue">Helvetica Neue</option>
+                            <option value="Times New Roman">Times New Roman</option>
+                        </select>
+                        <div class="formatting-options">
+                            <button id="boldBtn" class="btn format-btn">B</button>
+                            <button id="italicBtn" class="btn format-btn">I</button>
+                            <button id="underlineBtn" class="btn format-btn">U</button>
+                            <button id="strikeBtn" class="btn format-btn">S</button>
+                        </div>
+                        <div class="size-control">
+                            <button id="decreaseSizeBtn" class="btn size-btn">-</button>
+                            <span id="fontSizeDisplay">11pt</span>
+                            <button id="increaseSizeBtn" class="btn size-btn">+</button>
+                        </div>
+                        <div class="text-align">
+                            <button id="alignLeftBtn" class="btn align-btn">L</button>
+                            <button id="alignCenterBtn" class="btn align-btn">C</button>
+                            <button id="alignRightBtn" class="btn align-btn">R</button>
+                        </div>
+                        <label for="colorPicker">Color:</label>
+                        <input type="color" id="colorPicker">
+                        <div class="image-upload">
+                            <label for="imageUploadInput">Image:</label>
+                            <input type="file" id="imageUploadInput" accept="image/*">
+                            <div id="imageDropZone">Drag & Drop images here</div>
+                        </div>
+                    </div>
+                    <div class="save-export">
+                        <button id="saveBtn" class="btn">Save Progress</button>
+                        <button id="exportBtn" class="btn">Download</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@svgdotjs/svg.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@svgdotjs/svg.draggable.js"></script>
+    <script>
+        
+            const editor = document.getElementById('editor');
+            const fileInput = document.getElementById('fileInput');
+            const editTextInput = document.getElementById('editTextInput');
+            const fontSelect = document.getElementById('fontSelect');
+            const boldBtn = document.getElementById('boldBtn');
+            const italicBtn = document.getElementById('italicBtn');
+            const underlineBtn = document.getElementById('underlineBtn');
+            const strikeBtn = document.getElementById('strikeBtn');
+            const decreaseSizeBtn = document.getElementById('decreaseSizeBtn');
+            const increaseSizeBtn = document.getElementById('increaseSizeBtn');
+            const fontSizeDisplay = document.getElementById('fontSizeDisplay');
+            const alignLeftBtn = document.getElementById('alignLeftBtn');
+            const alignCenterBtn = document.getElementById('alignCenterBtn');
+            const alignRightBtn = document.getElementById('alignRightBtn');
+            const colorPicker = document.getElementById('colorPicker');
+            const imageUploadInput = document.getElementById('imageUploadInput');
+            const imageDropZone = document.getElementById('imageDropZone');
+            const saveBtn = document.getElementById('saveBtn');
+            const exportBtn = document.getElementById('exportBtn');
+
+            let selectedTextElement = null;
+            let fontSize = 11;
+
+
+            function setSVGDimensions() {
+                const svg = editor.querySelector('svg');
+                if (svg) {
+                    svg.setAttribute('width', '600');
+                    svg.setAttribute('height', '600');
+
+                }
+            }
+
+            function makeElementsEditable(container) {
+                const svgElements = container.querySelectorAll('text, rect, circle, path, polygon, polyline, ellipse');
+
+                svgElements.forEach(element => {
+                    const draw = SVG.adopt(element);
+                    draw.draggable();
+
+                    element.addEventListener('mousedown', function (event) {
+                        event.stopPropagation();
+                    });
+
+                    element.addEventListener('click', function (event) {
+                        if (element.tagName === 'text') {
+                            selectedTextElement = element;
+                            editTextInput.value = element.textContent;
+                            fontSelect.value = getComputedStyle(element).fontFamily.replace(/"/g, '');
+                            fontSize = parseInt(getComputedStyle(element).fontSize, 10);
+                            fontSizeDisplay.textContent = `${fontSize}pt`;
+                            colorPicker.value = rgbToHex(getComputedStyle(element).fill);
+                        }
+                    });
+                });
+            }
+
+            function rgbToHex(rgb) {
+                const result = rgb.match(/\d+/g);
+                return result ? `#${((1 << 24) + (parseInt(result[0]) << 16) + (parseInt(result[1]) << 8) + parseInt(result[2])).toString(16).slice(1)}` : rgb;
+            }
+
+            editTextInput.addEventListener('input', function () {
+                if (selectedTextElement) {
+                    selectedTextElement.textContent = editTextInput.value;
+                }
+            });
+
+            fontSelect.addEventListener('change', function () {
+                if (selectedTextElement) {
+                    selectedTextElement.style.fontFamily = fontSelect.value;
+                }
+            });
+
+            boldBtn.addEventListener('click', function () {
+                if (selectedTextElement) {
+                    selectedTextElement.style.fontWeight = selectedTextElement.style.fontWeight === 'bold' ? 'normal' : 'bold';
+                }
+            });
+
+            italicBtn.addEventListener('click', function () {
+                if (selectedTextElement) {
+                    selectedTextElement.style.fontStyle = selectedTextElement.style.fontStyle === 'italic' ? 'normal' : 'italic';
+                }
+            });
+
+            underlineBtn.addEventListener('click', function () {
+                if (selectedTextElement) {
+                    selectedTextElement.style.textDecoration = selectedTextElement.style.textDecoration === 'underline' ? 'none' : 'underline';
+                }
+            });
+
+            strikeBtn.addEventListener('click', function () {
+                if (selectedTextElement) {
+                    selectedTextElement.style.textDecoration = selectedTextElement.style.textDecoration === 'line-through' ? 'none' : 'line-through';
+                }
+            });
+
+            decreaseSizeBtn.addEventListener('click', function () {
+                if (selectedTextElement) {
+                    fontSize = Math.max(1, fontSize - 1);
+                    selectedTextElement.style.fontSize = `${fontSize}pt`;
+                    fontSizeDisplay.textContent = `${fontSize}pt`;
+                }
+            });
+
+            increaseSizeBtn.addEventListener('click', function () {
+                if (selectedTextElement) {
+                    fontSize = fontSize + 1;
+                    selectedTextElement.style.fontSize = `${fontSize}pt`;
+                    fontSizeDisplay.textContent = `${fontSize}pt`;
+                }
+            });
+
+            alignLeftBtn.addEventListener('click', function () {
+                if (selectedTextElement) {
+                    selectedTextElement.style.textAnchor = 'start';
+                }
+            });
+
+            alignCenterBtn.addEventListener('click', function () {
+                if (selectedTextElement) {
+                    selectedTextElement.style.textAnchor = 'middle';
+                }
+            });
+
+            alignRightBtn.addEventListener('click', function () {
+                if (selectedTextElement) {
+                    selectedTextElement.style.textAnchor = 'end';
+                }
+            });
+
+            colorPicker.addEventListener('input', function () {
+                if (selectedTextElement) {
+                    selectedTextElement.style.fill = colorPicker.value;
+                }
+            });
+
+            imageUploadInput.addEventListener('change', function (event) {
+                const file = event.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        const img = new Image();
+                        img.src = e.target.result;
+                        img.onload = function () {
+                            const draw = SVG(editor);
+                            draw.image(img.src).size(img.width, img.height).draggable();
+                        };
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            imageDropZone.addEventListener('dragover', function (event) {
+                event.preventDefault();
+                imageDropZone.style.borderColor = '#007bff';
+            });
+
+            imageDropZone.addEventListener('dragleave', function (event) {
+                imageDropZone.style.borderColor = '#ccc';
+            });
+
+            imageDropZone.addEventListener('drop', function (event) {
+                event.preventDefault();
+                imageDropZone.style.borderColor = '#ccc';
+                const file = event.dataTransfer.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        const img = new Image();
+                        img.src = e.target.result;
+                        img.onload = function () {
+                            const draw = SVG(editor);
+                            draw.image(img.src).size(img.width, img.height).draggable();
+                        };
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            saveBtn.addEventListener('click', function () {
+                const svgContent = editor.innerHTML;
+                localStorage.setItem('svgPoster', svgContent);
+            });
+
+            exportBtn.addEventListener('click', function () {
+                const svgContent = editor.innerHTML;
+                const blob = new Blob([svgContent], { type: 'image/svg+xml' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'poster.svg';
+                a.click();
+                URL.revokeObjectURL(url);
+            });
+
+
+            // Existing scripts here
+
+            // Get the modal
+            var modal = document.getElementById("myModal");
+
+            // Get the button that opens the modal
+            var btn = document.getElementById("openModalBtn");
+
+            // Get the <span> element that closes the modal
+            var span = document.getElementsByClassName("close")[0];
+
+            // When the user clicks the button, open the modal 
+
+            // When the user clicks on <span> (x), close the modal
+            span.onclick = function () {
+                modal.style.display = "none";
+            }
+
+            // When the user clicks anywhere outside of the modal, do nothing
+            window.onclick = function (event) {
+                if (event.target == modal) {
+                    // Do nothing
+                }
+            }
+
+            // Function to open modal with image
+            function openModalWithImage(imageUrl) {
+                // Check if the file is an SVG
+                    // Fetch the SVG content and save it to local storage
+                    fetch(imageUrl)
+                        .then(response => response.text())
+                        .then(svgContent => {
+                            localStorage.setItem('editableSvg', svgContent);
+                            openModalWithLocalStorageSvg();
+                        })
+                        .catch(error => console.error('Error loading SVG:', error));
+            }
+
+            // Function to open modal and load SVG from local storage
+            function openModalWithLocalStorageSvg() {
+                // Set modal to display flex
+                modal.style.display = "flex";
+
+                // Clear the editor content
+                var editor = document.getElementById('editor');
+                editor.innerHTML = '';
+
+                // Load the SVG content from local storage
+                const svgContent = localStorage.getItem('editableSvg');
+                if (svgContent) {
+                    //console.log(svgContent);
+                    editor.innerHTML = svgContent;
+                    //SVG(editor).find('svg').draggable();
+                    const svgElements = editor.querySelectorAll('text, rect, circle, path, polygon, polyline, ellipse');
+
+                    svgElements.forEach(element => {
+                        const draw = SVG.adopt(element);
+                        draw.draggable();
+
+                        element.addEventListener('mousedown', function (event) {
+                            event.stopPropagation();
+                        });
+
+                        element.addEventListener('click', function (event) {
+                            if (element.tagName === 'text') {
+                                selectedTextElement = element;
+                                editTextInput.value = element.textContent;
+                                fontSelect.value = getComputedStyle(element).fontFamily.replace(/"/g, '');
+                                fontSize = parseInt(getComputedStyle(element).fontSize, 10);
+                                fontSizeDisplay.textContent = `${fontSize}pt`;
+                                colorPicker.value = rgbToHex(getComputedStyle(element).fill);
+                            }
+                        });
+                    });
+                    //makeElementsEditable(editor);
+                    //setSVGDimensions();
+                    console.log(svgElements);
+                } else {
+                    console.error('No SVG content found in local storage.');
+                }
+            }
+        
+    </script>
+</body>
+
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- <!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SVG Poster Editor</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+        }
+
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        .file-input {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+        }
+
+        .editor {
+            width: 600px;
+            height: 600px;
+            background-color: white;
+            border: 1px solid #ccc;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            position: relative;
+            margin-right: 20px;
+            overflow: hidden;
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .text-edit-section {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .text-edit-section textarea {
+            width: 300px;
+            height: 50px;
+            margin-bottom: 10px;
+            padding: 5px;
+            font-size: 14px;
+        }
+
+        .text-edit-section label {
+            margin-top: 10px;
+        }
+
+        .formatting-options,
+        .size-control,
+        .text-align {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn:hover {
+            background-color: #0056b3;
+        }
+
+        .format-btn,
+        .size-btn,
+        .align-btn {
+            padding: 5px 10px;
+            font-size: 14px;
+        }
+
+        #colorPicker {
+            margin-top: 10px;
+        }
+
+        .image-upload {
+            margin-top: 10px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #imageDropZone {
+            width: 300px;
+            height: 100px;
+            border: 2px dashed #ccc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 10px;
+            font-size: 14px;
+            color: #888;
+        }
+
+        .save-export {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    
+    <div class="container">
+        <input type="file" id="fileInput" accept=".svg" class="file-input">
+        <div id="editor" class="editor"></div>
+        <div class="controls">
+            <div class="text-edit-section">
+                <textarea id="editTextInput" placeholder="Edit text here..."></textarea>
+                <label for="fontSelect">Font:</label>
+                <select id="fontSelect">
+                    <option value="Arial">Arial</option>
+                    <option value="Helvetica Neue">Helvetica Neue</option>
+                    <option value="Times New Roman">Times New Roman</option>
+                </select>
+                <div class="formatting-options">
+                    <button id="boldBtn" class="btn format-btn">B</button>
+                    <button id="italicBtn" class="btn format-btn">I</button>
+                    <button id="underlineBtn" class="btn format-btn">U</button>
+                    <button id="strikeBtn" class="btn format-btn">S</button>
+                </div>
+                <div class="size-control">
+                    <button id="decreaseSizeBtn" class="btn size-btn">-</button>
+                    <span id="fontSizeDisplay">11pt</span>
+                    <button id="increaseSizeBtn" class="btn size-btn">+</button>
+                </div>
+                <div class="text-align">
+                    <button id="alignLeftBtn" class="btn align-btn">L</button>
+                    <button id="alignCenterBtn" class="btn align-btn">C</button>
+                    <button id="alignRightBtn" class="btn align-btn">R</button>
+                </div>
+                <label for="colorPicker">Color:</label>
+                <input type="color" id="colorPicker">
+                <div class="image-upload">
+                    <label for="imageUploadInput">Image:</label>
+                    <input type="file" id="imageUploadInput" accept="image/*">
+                    <div id="imageDropZone">Drag & Drop images here</div>
+                </div>
+            </div>
+            <div class="save-export">
+                <button id="saveBtn" class="btn">Save Progress</button>
+                <button id="exportBtn" class="btn">Download</button>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/@svgdotjs/svg.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@svgdotjs/svg.draggable.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const editor = document.getElementById('editor');
+            const fileInput = document.getElementById('fileInput');
+            const editTextInput = document.getElementById('editTextInput');
+            const fontSelect = document.getElementById('fontSelect');
+            const boldBtn = document.getElementById('boldBtn');
+            const italicBtn = document.getElementById('italicBtn');
+            const underlineBtn = document.getElementById('underlineBtn');
+            const strikeBtn = document.getElementById('strikeBtn');
+            const decreaseSizeBtn = document.getElementById('decreaseSizeBtn');
+            const increaseSizeBtn = document.getElementById('increaseSizeBtn');
+            const fontSizeDisplay = document.getElementById('fontSizeDisplay');
+            const alignLeftBtn = document.getElementById('alignLeftBtn');
+            const alignCenterBtn = document.getElementById('alignCenterBtn');
+            const alignRightBtn = document.getElementById('alignRightBtn');
+            const colorPicker = document.getElementById('colorPicker');
+            const imageUploadInput = document.getElementById('imageUploadInput');
+            const imageDropZone = document.getElementById('imageDropZone');
+            const saveBtn = document.getElementById('saveBtn');
+            const exportBtn = document.getElementById('exportBtn');
+
+            let selectedTextElement = null;
+            let fontSize = 11;
+
+            fileInput.addEventListener('change', function (event) {
+                const file = event.target.files[0];
+                if (file && file.type === 'image/svg+xml') {
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        editor.innerHTML = e.target.result;
+                        makeElementsEditable(editor);
+                        setSVGDimensions();
+
+                    };
+                    reader.readAsText(file);
+                } else {
+                    alert('Please upload a valid SVG file.');
+                }
+            });
+
+            function setSVGDimensions() {
+                const svg = editor.querySelector('svg');
+                if (svg) {
+                    console.log("SVG file found!");
+                    svg.setAttribute('width', '600');
+                    svg.setAttribute('height', '600');
+
+                }
+            }
+
+            function makeElementsEditable(container) {
+                const svgElements = container.querySelectorAll('text, rect, circle, path, polygon, polyline, ellipse');
+
+                svgElements.forEach(element => {
+                    const draw = SVG.adopt(element);
+                    draw.draggable();
+
+                    element.addEventListener('mousedown', function (event) {
+                        event.stopPropagation();
+                    });
+
+                    element.addEventListener('click', function (event) {
+                        if (element.tagName === 'text') {
+                            selectedTextElement = element;
+                            editTextInput.value = element.textContent;
+                            fontSelect.value = getComputedStyle(element).fontFamily.replace(/"/g, '');
+                            fontSize = parseInt(getComputedStyle(element).fontSize, 10);
+                            fontSizeDisplay.textContent = `${fontSize}pt`;
+                            colorPicker.value = rgbToHex(getComputedStyle(element).fill);
+                        }
+                    });
+                });
+            }
+
+            function rgbToHex(rgb) {
+                const result = rgb.match(/\d+/g);
+                return result ? `#${((1 << 24) + (parseInt(result[0]) << 16) + (parseInt(result[1]) << 8) + parseInt(result[2])).toString(16).slice(1)}` : rgb;
+            }
+
+            editTextInput.addEventListener('input', function () {
+                if (selectedTextElement) {
+                    selectedTextElement.textContent = editTextInput.value;
+                }
+            });
+
+            fontSelect.addEventListener('change', function () {
+                if (selectedTextElement) {
+                    selectedTextElement.style.fontFamily = fontSelect.value;
+                }
+            });
+
+            boldBtn.addEventListener('click', function () {
+                if (selectedTextElement) {
+                    selectedTextElement.style.fontWeight = selectedTextElement.style.fontWeight === 'bold' ? 'normal' : 'bold';
+                }
+            });
+
+            italicBtn.addEventListener('click', function () {
+                if (selectedTextElement) {
+                    selectedTextElement.style.fontStyle = selectedTextElement.style.fontStyle === 'italic' ? 'normal' : 'italic';
+                }
+            });
+
+            underlineBtn.addEventListener('click', function () {
+                if (selectedTextElement) {
+                    selectedTextElement.style.textDecoration = selectedTextElement.style.textDecoration === 'underline' ? 'none' : 'underline';
+                }
+            });
+
+            strikeBtn.addEventListener('click', function () {
+                if (selectedTextElement) {
+                    selectedTextElement.style.textDecoration = selectedTextElement.style.textDecoration === 'line-through' ? 'none' : 'line-through';
+                }
+            });
+
+            decreaseSizeBtn.addEventListener('click', function () {
+                if (selectedTextElement) {
+                    fontSize = Math.max(1, fontSize - 1);
+                    selectedTextElement.style.fontSize = `${fontSize}pt`;
+                    fontSizeDisplay.textContent = `${fontSize}pt`;
+                }
+            });
+
+            increaseSizeBtn.addEventListener('click', function () {
+                if (selectedTextElement) {
+                    fontSize = fontSize + 1;
+                    selectedTextElement.style.fontSize = `${fontSize}pt`;
+                    fontSizeDisplay.textContent = `${fontSize}pt`;
+                }
+            });
+
+            alignLeftBtn.addEventListener('click', function () {
+                if (selectedTextElement) {
+                    selectedTextElement.style.textAnchor = 'start';
+                }
+            });
+
+            alignCenterBtn.addEventListener('click', function () {
+                if (selectedTextElement) {
+                    selectedTextElement.style.textAnchor = 'middle';
+                }
+            });
+
+            alignRightBtn.addEventListener('click', function () {
+                if (selectedTextElement) {
+                    selectedTextElement.style.textAnchor = 'end';
+                }
+            });
+
+            colorPicker.addEventListener('input', function () {
+                if (selectedTextElement) {
+                    selectedTextElement.style.fill = colorPicker.value;
+                }
+            });
+
+            imageUploadInput.addEventListener('change', function (event) {
+                const file = event.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        const img = new Image();
+                        img.src = e.target.result;
+                        img.onload = function () {
+                            const draw = SVG(editor);
+                            draw.image(img.src).size(img.width, img.height).draggable();
+                        };
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            imageDropZone.addEventListener('dragover', function (event) {
+                event.preventDefault();
+                imageDropZone.style.borderColor = '#007bff';
+            });
+
+            imageDropZone.addEventListener('dragleave', function (event) {
+                imageDropZone.style.borderColor = '#ccc';
+            });
+
+            imageDropZone.addEventListener('drop', function (event) {
+                event.preventDefault();
+                imageDropZone.style.borderColor = '#ccc';
+                const file = event.dataTransfer.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        const img = new Image();
+                        img.src = e.target.result;
+                        img.onload = function () {
+                            const draw = SVG(editor);
+                            draw.image(img.src).size(img.width, img.height).draggable();
+                        };
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            saveBtn.addEventListener('click', function () {
+                const svgContent = editor.innerHTML;
+                localStorage.setItem('svgPoster', svgContent);
+            });
+
+            exportBtn.addEventListener('click', function () {
+                const svgContent = editor.innerHTML;
+                const blob = new Blob([svgContent], { type: 'image/svg+xml' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'poster.svg';
+                a.click();
+                URL.revokeObjectURL(url);
+            });
+        });
+
+    </script>
+</body>
+
+</html> -->

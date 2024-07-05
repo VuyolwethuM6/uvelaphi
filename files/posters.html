@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tabbed Interface with Firebase Images</title>
+    <!-- <link rel="stylesheet" href="styles.css"> -->
+
+    <link rel="stylesheet" href="../css/bootstrap.min.css">
+    <link rel="stylesheet" href="../css/font-awesome.min.css">
+    <link rel="stylesheet" href="../css/animate.css">
+    <link rel="stylesheet" href="../css/owl.carousel.css">
+    <link rel="stylesheet" href="../css/owl.theme.default.min.css">
+    <link rel="stylesheet" href="../css/magnific-popup.css">
+
+    <!-- MAIN CSS -->
+    <link rel="stylesheet" href="../css/templatemo-style.css">
+
+    <style>
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 1100px;
+
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+
+        .editor {
+            width: 600px;
+            height: 600px;
+            background-color: white;
+            border: 1px solid #ccc;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            position: relative;
+            margin-right: 20px;
+            overflow: hidden;
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .text-edit-section {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .text-edit-section textarea {
+            width: 300px;
+            height: 50px;
+            margin-bottom: 10px;
+            padding: 5px;
+            font-size: 14px;
+        }
+
+        .text-edit-section label {
+            margin-top: 10px;
+        }
+
+        .formatting-options,
+        .size-control,
+        .text-align {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn:hover {
+            background-color: #0056b3;
+        }
+
+        .format-btn,
+        .size-btn,
+        .align-btn {
+            padding: 5px 10px;
+            font-size: 14px;
+        }
+
+        #colorPicker {
+            margin-top: 10px;
+        }
+
+        .image-upload {
+            margin-top: 10px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #imageDropZone {
+            width: 300px;
+            height: 100px;
+            border: 2px dashed #ccc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 10px;
+            font-size: 14px;
+            color: #888;
+        }
+
+        .save-export {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+
+        .tab {
+            overflow: hidden;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 2rem;
+            margin-top: 166px;
+        }
+
+        .tab button {
+            background-color: #f2f2f2;
+            font-weight: bold;
+            border-radius: 7px;
+            outline: none;
+            cursor: pointer;
+            padding: 10px;
+            margin: 0.5rem;
+            flex-grow: 1;
+            max-width: 200px;
+            transition: background-color 0.3s;
+        }
+
+        .tab button:hover {
+            background-color: #ddd;
+        }
+
+        .tab button.active {
+            background-color: rgb(0, 0, 0);
+            color: rgb(255, 255, 255);
+        }
+
+        .tabcontent {
+            display: none;
+            padding: 6px 12px;
+            border: 4px solid #ffffff;
+            border-top: none;
+        }
+
+        .tabcontent h3 {
+            margin-top: 0;
+            border: 4px solid #ffffff;
+        }
+
+        .card-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            border: 4px solid #ffffff;
+        }
+
+        .card {
+            position: relative;
+            width: 368px;
+            height: 475px;
+            background-color: #f8f8f8;
+            border: 1px solid #e0dcdc;
+            margin: 15px;
+            /* Add some margin between cards */
+            border-radius: 5px;
+        }
+
+
+        .card img {
+            width: 368px;
+            height: 475px;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            background-color: rgba(158, 161, 158, 0.5);
+            /* Semi-transparent green */
+            border-radius: 5px;
+        }
+
+        .card:hover::before {
+            display: block;
+        }
+
+        .customize-link {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: none;
+            color: #ffffff;
+            /* White text color */
+            text-decoration: none;
+            /* Remove underline */
+            padding: 12px 24px;
+            background-color: #5a855b;
+            border-radius: 5px;
+        }
+
+        .card:hover .customize-link {
+            display: block;
+        }
+
+        .customize-link:hover {
+            text-decoration: underline;
+            /* Underline on hover */
+        }
+
+        @media (max-width: 768px) {
+            .card-link {
+                padding: 8px;
+                font-size: smaller;
+            }
+
+            .tab button {
+                max-width: 100%;
+            }
+
+            .card-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+
+    <!-- MENU -->
+    <section class="navbar custom-navbar navbar-fixed-top" role="navigation">
+        <div class="container">
+
+            <div class="navbar-header">
+                <button class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                    <span class="icon icon-bar"></span>
+                    <span class="icon icon-bar"></span>
+                    <span class="icon icon-bar"></span>
+                </button>
+
+                <!-- lOGO TEXT HERE -->
+                <!-- <a href="index.html" class="navbar-brands"><img src="images/Uvelaphi.png" width="100" height="80" alt="uvelaphi-logo"></a> -->
+                <a href="index.html" class="navbar-brand">Uvelaphi <span>?</span> Know Your Roots</a>
+            </div>
+
+            <!-- MENU LINKS -->
+            <div class="collapse navbar-collapse">
+                <ul class="nav navbar-nav navbar-nav-first">
+                    <li><a href="#home" class="smoothScroll">Home</a></li>
+                    <li><a href="#about" class="smoothScroll">About</a></li>
+                    <li><a href="#menu" class="smoothScroll">Clan Names</a></li>
+                    <!-- <li><a href="#menu" class="smoothScroll">Resources</a></li> -->
+                    <!-- <li><a href="#contact" class="smoothScroll">Contact</a></li> -->
+                </ul>
+
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="tel:+27672488896" class="call-button">
+                            <i class="fa fa-phone"></i> Call Now! 067 248 8896
+                        </a>
+                    </li>
+                    <a href="./files/test.html" class="section-btn">Design A Poster</a>
+                </ul>
+            </div>
+
+        </div>
+    </section>
+
+
+    <div class="tab">
+        <button class="tablinks" onclick="openTab(event, 'tab1')">All Templates</button>
+        <button class="tablinks" onclick="openTab(event, 'tab2')">Posters</button>
+        <button class="tablinks" onclick="openTab(event, 'tab3')">Invitation Cards</button>
+    </div>
+
+
+    <!-- The Modal -->
+    <div id="myModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <!-- Existing editor content here -->
+            <div class="container">
+                <!-- <input type="file" id="fileInput" accept=".svg" class="file-input"> -->
+                <div id="editor" class="editor"></div>
+                <div class="controls">
+                    <div class="text-edit-section">
+                        <textarea id="editTextInput" placeholder="Edit text here..."></textarea>
+                        <label for="fontSelect">Font:</label>
+                        <select id="fontSelect">
+                            <option value="Arial">Arial</option>
+                            <option value="Helvetica Neue">Helvetica Neue</option>
+                            <option value="Times New Roman">Times New Roman</option>
+                        </select>
+                        <div class="formatting-options">
+                            <button id="boldBtn" class="btn format-btn">B</button>
+                            <button id="italicBtn" class="btn format-btn">I</button>
+                            <button id="underlineBtn" class="btn format-btn">U</button>
+                            <button id="strikeBtn" class="btn format-btn">S</button>
+                        </div>
+                        <div class="size-control">
+                            <button id="decreaseSizeBtn" class="btn size-btn">-</button>
+                            <span id="fontSizeDisplay">11pt</span>
+                            <button id="increaseSizeBtn" class="btn size-btn">+</button>
+                        </div>
+                        <div class="text-align">
+                            <button id="alignLeftBtn" class="btn align-btn">L</button>
+                            <button id="alignCenterBtn" class="btn align-btn">C</button>
+                            <button id="alignRightBtn" class="btn align-btn">R</button>
+                        </div>
+                        <label for="colorPicker">Color:</label>
+                        <input type="color" id="colorPicker">
+                        <div class="image-upload">
+                            <label for="imageUploadInput">Image:</label>
+                            <input type="file" id="imageUploadInput" accept="image/*">
+                            <div id="imageDropZone">Drag & Drop images here</div>
+                        </div>
+                    </div>
+                    <div class="save-export">
+                        <button id="saveBtn" class="btn">Save Progress</button>
+                        <button id="exportBtn" class="btn">Download</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <div id="tab1" class="tabcontent">
+        <div class="card-grid" id="tab1-cards">
+            <!-- Cards for Tab 1 will be dynamically added here -->
+        </div>
+    </div>
+
+    <div id="tab2" class="tabcontent">
+        <div class="card-grid" id="tab2-cards">
+            <!-- Cards for Tab 2 will be dynamically added here -->
+        </div>
+    </div>
+
+    <div id="tab3" class="tabcontent">
+        <div class="card-grid" id="tab3-cards">
+            <!-- Cards for Tab 3 will be dynamically added here -->
+        </div>
+    </div>
+
+
+    <!-- CONTACT -->
+    <section id="contact" data-stellar-background-ratio="0.5">
+        <div class="container">
+            <div class="row">
+                <!-- How to change your own map point
+          1. Go to Google Maps
+          2. Click on your location point
+          3. Click "Share" and choose "Embed map" tab
+          4. Copy only URL and paste it within the src="" field below
+  -->
+                <div class="wow fadeInUp col-md-6 col-sm-12" data-wow-delay="0.4s">
+                    <div id="google-map">
+                        <iframe
+                            src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d3311.303460375352!2d18.649084495428248!3d-33.90758858291497!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x80b823620626886f!2sAppmaniazar!5e0!3m2!1sen!2sza!4v1654256363477!5m2!1sen!2sza"
+                            width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-sm-12">
+
+                    <div class="col-md-12 col-sm-12">
+                        <div class="section-title wow fadeInUp" data-wow-delay="0.1s">
+                            <h2>Contact Us</h2>
+                        </div>
+                    </div>
+
+                    <!-- CONTACT FORM -->
+                    <form action="#" method="post" class="wow fadeInUp" id="contact-form" role="form"
+                        data-wow-delay="0.8s">
+
+                        <!-- IF MAIL SENT SUCCESSFUL  // connect this with custom JS -->
+                        <h6 class="text-success">Your message has been sent successfully.</h6>
+
+                        <!-- IF MAIL NOT SENT -->
+                        <h6 class="text-danger">E-mail must be valid and message must be longer than 1 character.</h6>
+
+                        <div class="col-md-6 col-sm-6">
+                            <input type="text" class="form-control" id="cf-name" name="name" placeholder="Full name">
+                        </div>
+
+                        <div class="col-md-6 col-sm-6">
+                            <input type="email" class="form-control" id="cf-email" name="email"
+                                placeholder="Email address">
+                        </div>
+
+                        <div class="col-md-12 col-sm-12">
+                            <input type="text" class="form-control" id="cf-subject" name="subject"
+                                placeholder="Subject">
+
+                            <textarea class="form-control" rows="6" id="cf-message" name="message"
+                                placeholder="Tell about your project"></textarea>
+
+                            <button type="submit" class="form-control" id="cf-submit" name="submit">Send
+                                Message</button>
+                        </div>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+
+
+
+
+    <!-- SCRIPTS -->
+    <script src="../js/jquery.js"></script>
+    <script src="../js/bootstrap.min.js"></script>
+    <script src="../js/jquery.stellar.min.js"></script>
+    <script src="../js/wow.min.js"></script>
+    <script src="../js/owl.carousel.min.js"></script>
+    <script src="../js/jquery.magnific-popup.min.js"></script>
+    <script src="../js/smoothscroll.js"></script>
+    <script src="../js/custom.js"></script>
+
+    <!-- Firebase SDK -->
+    <script type="module" src="https://www.gstatic.com/firebasejs/9.4.0/firebase-app.js"></script>
+    <script type="module" src="https://www.gstatic.com/firebasejs/9.4.0/firebase-storage.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/@svgdotjs/svg.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@svgdotjs/svg.draggable.js"></script>
+
+    <!-- Your custom script as a module -->
+    <script type="module">
+        // Import Firebase modules (if using ES modules)
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.4.0/firebase-app.js';
+        import { getStorage, ref, listAll, getDownloadURL } from 'https://www.gstatic.com/firebasejs/9.4.0/firebase-storage.js';
+
+
+
+        // Initialize Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyAMDMueFyKy8CZEnUT-UgFpWJ_wJYVRySo",
+            authDomain: "uvelaphi-designs.firebaseapp.com",
+            projectId: "uvelaphi-designs",
+            storageBucket: "uvelaphi-designs.appspot.com",
+            messagingSenderId: "407368206430",
+            appId: "1:407368206430:web:6df77e45b3881f5b620ccf",
+            measurementId: "G-38MR0Q3L8W"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const storage = getStorage(app);
+
+
+        const editor = document.getElementById('editor');
+        const fileInput = document.getElementById('fileInput');
+        const editTextInput = document.getElementById('editTextInput');
+        const fontSelect = document.getElementById('fontSelect');
+        const boldBtn = document.getElementById('boldBtn');
+        const italicBtn = document.getElementById('italicBtn');
+        const underlineBtn = document.getElementById('underlineBtn');
+        const strikeBtn = document.getElementById('strikeBtn');
+        const decreaseSizeBtn = document.getElementById('decreaseSizeBtn');
+        const increaseSizeBtn = document.getElementById('increaseSizeBtn');
+        const fontSizeDisplay = document.getElementById('fontSizeDisplay');
+        const alignLeftBtn = document.getElementById('alignLeftBtn');
+        const alignCenterBtn = document.getElementById('alignCenterBtn');
+        const alignRightBtn = document.getElementById('alignRightBtn');
+        const colorPicker = document.getElementById('colorPicker');
+        const imageUploadInput = document.getElementById('imageUploadInput');
+        const imageDropZone = document.getElementById('imageDropZone');
+        const saveBtn = document.getElementById('saveBtn');
+        const exportBtn = document.getElementById('exportBtn');
+
+        let selectedTextElement = null;
+        let fontSize = 11;
+
+        function rgbToHex(rgb) {
+            const result = rgb.match(/\d+/g);
+            return result ? `#${((1 << 24) + (parseInt(result[0]) << 16) + (parseInt(result[1]) << 8) + parseInt(result[2])).toString(16).slice(1)}` : rgb;
+        }
+
+        editTextInput.addEventListener('input', function () {
+            if (selectedTextElement) {
+                selectedTextElement.textContent = editTextInput.value;
+            }
+        });
+
+        fontSelect.addEventListener('change', function () {
+            if (selectedTextElement) {
+                selectedTextElement.style.fontFamily = fontSelect.value;
+            }
+        });
+
+        boldBtn.addEventListener('click', function () {
+            if (selectedTextElement) {
+                selectedTextElement.style.fontWeight = selectedTextElement.style.fontWeight === 'bold' ? 'normal' : 'bold';
+            }
+        });
+
+        italicBtn.addEventListener('click', function () {
+            if (selectedTextElement) {
+                selectedTextElement.style.fontStyle = selectedTextElement.style.fontStyle === 'italic' ? 'normal' : 'italic';
+            }
+        });
+
+        underlineBtn.addEventListener('click', function () {
+            if (selectedTextElement) {
+                selectedTextElement.style.textDecoration = selectedTextElement.style.textDecoration === 'underline' ? 'none' : 'underline';
+            }
+        });
+
+        strikeBtn.addEventListener('click', function () {
+            if (selectedTextElement) {
+                selectedTextElement.style.textDecoration = selectedTextElement.style.textDecoration === 'line-through' ? 'none' : 'line-through';
+            }
+        });
+
+        decreaseSizeBtn.addEventListener('click', function () {
+            if (selectedTextElement) {
+                fontSize = Math.max(1, fontSize - 1);
+                selectedTextElement.style.fontSize = `${fontSize}pt`;
+                fontSizeDisplay.textContent = `${fontSize}pt`;
+            }
+        });
+
+        increaseSizeBtn.addEventListener('click', function () {
+            if (selectedTextElement) {
+                fontSize = fontSize + 1;
+                selectedTextElement.style.fontSize = `${fontSize}pt`;
+                fontSizeDisplay.textContent = `${fontSize}pt`;
+            }
+        });
+
+        alignLeftBtn.addEventListener('click', function () {
+            if (selectedTextElement) {
+                selectedTextElement.style.textAnchor = 'start';
+            }
+        });
+
+        alignCenterBtn.addEventListener('click', function () {
+            if (selectedTextElement) {
+                selectedTextElement.style.textAnchor = 'middle';
+            }
+        });
+
+        alignRightBtn.addEventListener('click', function () {
+            if (selectedTextElement) {
+                selectedTextElement.style.textAnchor = 'end';
+            }
+        });
+
+        colorPicker.addEventListener('input', function () {
+            if (selectedTextElement) {
+                selectedTextElement.style.fill = colorPicker.value;
+            }
+        });
+
+        imageUploadInput.addEventListener('change', function (event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const img = new Image();
+                    img.src = e.target.result;
+                    img.onload = function () {
+                        const draw = SVG(editor);
+                        draw.image(img.src).size(img.width, img.height).draggable();
+                    };
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        imageDropZone.addEventListener('dragover', function (event) {
+            event.preventDefault();
+            imageDropZone.style.borderColor = '#007bff';
+        });
+
+        imageDropZone.addEventListener('dragleave', function (event) {
+            imageDropZone.style.borderColor = '#ccc';
+        });
+
+        imageDropZone.addEventListener('drop', function (event) {
+            event.preventDefault();
+            imageDropZone.style.borderColor = '#ccc';
+            const file = event.dataTransfer.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const img = new Image();
+                    img.src = e.target.result;
+                    img.onload = function () {
+                        const draw = SVG(editor);
+                        draw.image(img.src).size(img.width, img.height).draggable();
+                    };
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        saveBtn.addEventListener('click', function () {
+            const svgContent = editor.innerHTML;
+            localStorage.setItem('svgPoster', svgContent);
+        });
+
+        exportBtn.addEventListener('click', function () {
+            const svgContent = editor.innerHTML;
+            const blob = new Blob([svgContent], { type: 'image/svg+xml' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'poster.svg';
+            a.click();
+            URL.revokeObjectURL(url);
+        });
+
+        // Get the modal
+        const modal = document.getElementById("myModal");
+        const modalImg = document.getElementById("modalImage");
+
+        // Function to open the modal with selected image
+        // function openModal(imageUrl) {
+        //   modal.style.display = "block";
+        //   modalImg.src = imageUrl;
+        // }
+
+        // Function to open the modal with selected image
+        function openModal(imageUrl) {
+            const modal = document.getElementById('myModal');
+            const modalClose = modal.querySelector('.close');
+            const editor = modal.querySelector('#editor');
+
+            fetch(imageUrl)
+                .then(response => response.text())
+                .then(svgContent => {
+                    console.error('Error loading SVG');
+                    console.error(svgContent);
+                    localStorage.setItem('editableSvg', svgContent);
+                    openModalWithLocalStorageSvg();
+                })
+                .catch(error => console.error('Error loading SVG:', error));
+        };
+
+        // Function to open modal and load SVG from local storage
+        function openModalWithLocalStorageSvg() {
+            // Set modal to display flex
+            modal.style.display = "flex";
+
+            // Clear the editor content
+            var editor = document.getElementById('editor');
+            editor.innerHTML = '';
+
+            // Load the SVG content from local storage
+            const svgContent = localStorage.getItem('editableSvg');
+            if (svgContent) {
+                //console.log(svgContent);
+                editor.innerHTML = svgContent;
+                //SVG(editor).find('svg').draggable();
+                const svgElements = editor.querySelectorAll('text, rect, circle, path, polygon, polyline, ellipse');
+
+                svgElements.forEach(element => {
+                    const draw = SVG.adopt(element);
+                    draw.draggable();
+
+                    element.addEventListener('mousedown', function (event) {
+                        event.stopPropagation();
+                    });
+
+                    element.addEventListener('click', function (event) {
+                        if (element.tagName === 'text') {
+                            selectedTextElement = element;
+                            editTextInput.value = element.textContent;
+                            fontSelect.value = getComputedStyle(element).fontFamily.replace(/"/g, '');
+                            fontSize = parseInt(getComputedStyle(element).fontSize, 10);
+                            fontSizeDisplay.textContent = `${fontSize}pt`;
+                            colorPicker.value = rgbToHex(getComputedStyle(element).fill);
+                        }
+                    });
+                });
+                //makeElementsEditable(editor);
+                //setSVGDimensions();
+                console.log(svgElements);
+            } else {
+                console.error('No SVG content found in local storage.');
+            }
+        }
+
+        // Get the <span> element that closes the modal
+        const span = document.getElementsByClassName("close")[0];
+
+        // When the user clicks on <span> (x), close the modal
+        span.onclick = function () {
+            modal.style.display = "none";
+        }
+
+        // When the user clicks anywhere outside of the modal, close it
+        window.onclick = function (event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
+
+        // Function to switch tabs
+        window.openTab = function (evt, tabName) {
+            const tabcontent = document.getElementsByClassName("tabcontent");
+            for (let i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].style.display = "none";
+            }
+
+            const tablinks = document.getElementsByClassName("tablinks");
+            for (let i = 0; i < tablinks.length; i++) {
+                tablinks[i].className = tablinks[i].className.replace(" active", "");
+            }
+
+            document.getElementById(tabName).style.display = "block";
+            evt.currentTarget.className += " active";
+        }
+
+        // Fetch images from Firebase Storage and populate cards dynamically
+        async function fetchImages(tabId, folderName) {
+            const cardsContainer = document.getElementById(tabId + "-cards");
+
+            // Reference to the storage bucket
+            const storageRef = ref(storage, folderName);
+
+            try {
+                // Fetch images
+                const res = await listAll(storageRef);
+                res.items.forEach(async (itemRef) => {
+                    try {
+                        // Get download URL for each image
+                        const imageUrl = await getDownloadURL(itemRef);
+                        console.log(imageUrl);
+                        const cardDiv = document.createElement("div");
+                        cardDiv.classList.add("card");
+
+                        const imageLink = document.createElement("a");
+                        imageLink.href = "#";
+                        imageLink.classList.add("customize-link");
+                        imageLink.onclick = function () {
+                            openModal(imageUrl);
+                        };
+                        imageLink.textContent = "Customize";
+
+                        const imageElement = document.createElement("img");
+                        imageElement.src = imageUrl;
+                        imageElement.alt = "Image";
+
+                        cardDiv.appendChild(imageLink);
+                        cardDiv.appendChild(imageElement);
+
+                        cardsContainer.appendChild(cardDiv);
+                    } catch (error) {
+                        console.error("Error getting download URL:", error);
+                    }
+                });
+            } catch (error) {
+                console.error("Error listing images:", error);
+            }
+        }
+
+        // Fetch images for each tab on page load
+        document.addEventListener("DOMContentLoaded", function () {
+            openTab({ currentTarget: document.getElementsByClassName("tablinks")[0] }, 'tab1'); // Open the first tab by default
+
+            fetchImages("tab1", "");
+            fetchImages("tab2", "posters");
+            fetchImages("tab3", "invitation-cards");
+        });
+
+
+    </script>
+
+</body>
+
+</html>
